@@ -27,7 +27,7 @@ bin_dir: /usr/local/bin
 #  port: 1234
 
 ## Internal loadbalancers for apiservers
-#loadbalancer_apiserver_localhost: true
+loadbalancer_apiserver_localhost: true
 
 ## Local loadbalancer should use this port instead, if defined.
 ## Defaults to kube_apiserver_port (6443)
@@ -86,7 +86,7 @@ bin_dir: /usr/local/bin
 #openstack_lbaas_monitor_max_retries: "3"
 
 ## Uncomment to enable experimental kubeadm deployment mode
-#kubeadm_enabled: false
+#kubeadm_enabled: true
 #kubeadm_token_first: "{{ lookup('password', 'credentials/kubeadm_token_first length=6  chars=ascii_lowercase,digits') }}"
 #kubeadm_token_second: "{{ lookup('password', 'credentials/kubeadm_token_second length=16 chars=ascii_lowercase,digits') }}"
 #kubeadm_token: "{{ kubeadm_token_first }}.{{ kubeadm_token_second }}"
