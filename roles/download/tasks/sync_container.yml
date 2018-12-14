@@ -17,6 +17,7 @@
     - download.enabled
     - download.container
     - download_run_once
+
   tags:
     - facts
 
@@ -42,7 +43,7 @@
 
 - name: container_download | Stat saved container image
   stat:
-    path: "{{fname}}"
+    path: "{{ fname }}"
   register: img
   changed_when: false
   delegate_to: "{{ download_delegate }}"
@@ -96,9 +97,9 @@
     mode: push
   delegate_to: localhost
   delegate_facts: no
-  become: false
+  become: true
   register: get_task
-  until: get_task|succeeded
+  until: get_task is succeeded
   retries: 4
   delay: "{{ retry_stagger | random + 3 }}"
   when:

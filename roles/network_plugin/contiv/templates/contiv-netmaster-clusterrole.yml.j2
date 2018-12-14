@@ -2,7 +2,7 @@ kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1beta1
 metadata:
   name: contiv-netmaster
-  namespace: {{ system_namespace }}
+  namespace: kube-system
 rules:
   - apiGroups:
     - ""
@@ -13,6 +13,15 @@ rules:
       - namespaces
       - networkpolicies
     verbs:
+      - get
       - watch
       - list
       - update
+  - apiGroups:
+    - policy
+    resourceNames:
+    - privileged
+    resources:
+    - podsecuritypolicies
+    verbs:
+    - use

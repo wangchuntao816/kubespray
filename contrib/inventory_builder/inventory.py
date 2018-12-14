@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
@@ -41,7 +41,7 @@ import re
 import sys
 
 ROLES = ['all', 'kube-master', 'kube-node', 'etcd', 'k8s-cluster:children',
-         'calico-rr', 'vault']
+         'calico-rr']
 PROTECTED_NAMES = ROLES
 AVAILABLE_COMMANDS = ['help', 'print_cfg', 'print_ips', 'load']
 _boolean_states = {'1': True, 'yes': True, 'true': True, 'on': True,
@@ -250,7 +250,6 @@ class KubesprayInventory(object):
     def set_etcd(self, hosts):
         for host in hosts:
             self.add_host_to_group('etcd', host)
-            self.add_host_to_group('vault', host)
 
     def load_file(self, files=None):
         '''Directly loads JSON, or YAML file to inventory.'''

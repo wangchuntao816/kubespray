@@ -52,7 +52,7 @@ You can modify how Kubespray sets up DNS for your cluster with the variables ``d
 ## dns_mode
 ``dns_mode`` configures how Kubespray will setup cluster DNS. There are four modes available:
 
-#### dnsmasq_kubedns (default)
+#### dnsmasq_kubedns
 This installs an additional dnsmasq DaemonSet which gives more flexibility and lifts some
 limitations (e.g. number of nameservers). Kubelet is instructed to use dnsmasq instead of kubedns/skydns.
 It is configured to forward all DNS queries belonging to cluster services to kubedns/skydns. All
@@ -61,6 +61,14 @@ other queries are forwardet to the nameservers found in ``upstream_dns_servers``
 #### kubedns
 This does not install the dnsmasq DaemonSet and instructs kubelet to directly use kubedns/skydns for
 all queries.
+
+#### coredns (default)
+This does not install the dnsmasq DaemonSet and instructs kubelet to directly use CoreDNS for
+all queries.
+
+#### coredns_dual
+This does not install the dnsmasq DaemonSet and instructs kubelet to directly use CoreDNS for
+all queries. It will also deploy a secondary CoreDNS stack
 
 #### manual
 This does not install dnsmasq or kubedns, but allows you to specify
@@ -75,6 +83,11 @@ leaves you with a non functional cluster.
 ## resolvconf_mode
 ``resolvconf_mode`` configures how Kubespray will setup DNS for ``hostNetwork: true`` PODs and non-k8s containers.
 There are three modes available:
+
+## Nodelocal DNS cache
+Setting ``enable_nodelocaldns`` to ``true`` will make pods reach out to the dns (core-dns) caching agent running on the same node, thereby avoiding iptables DNAT rules and connection tracking. The local caching agent will query kube-dns / core-dns (depending on what main DNS plugin is configured in your cluster) for cache misses of cluster hostnames(cluster.local suffix by default).
+
+More information on the rationale behind this implementation can be found [here](https://github.com/kubernetes/enhancements/blob/master/keps/sig-network/0030-nodelocal-dns-cache.md).
 
 #### docker_dns (default)
 This sets up the docker daemon with additional --dns/--dns-search/--dns-opt flags.
