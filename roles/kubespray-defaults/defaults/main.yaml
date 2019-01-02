@@ -3,7 +3,7 @@
 # This change obseletes editing ansible.cfg file depending on bastion existance
 ansible_ssh_common_args: "{% if 'bastion' in groups['all'] %} -o ProxyCommand='ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -W %h:%p {{ hostvars['bastion']['ansible_user'] }}@{{ hostvars['bastion']['ansible_host'] }} {% if ansible_ssh_private_key_file is defined %}-i {{ ansible_ssh_private_key_file }}{% endif %} ' {% endif %}"
 
-kube_api_anonymous_auth: true
+kube_api_anonymous_auth: false
 
 # Default value, but will be set to true automatically if detected
 is_atomic: false
@@ -12,7 +12,7 @@ is_atomic: false
 disable_swap: true
 
 ## Change this to use another Kubernetes version, e.g. a current beta release
-kube_version: v1.13.1
+kube_version: v1.12.3
 
 ## Kube Proxy mode One of ['iptables','ipvs']
 kube_proxy_mode: ipvs
@@ -45,9 +45,6 @@ cluster_name: cluster.local
 ndots: 2
 # Can be dnsmasq_kubedns, kubedns, manual or none
 dns_mode: coredns
-
-# Enable nodelocal dns cache
-enable_nodelocaldns: False
 
 # Should be set to a cluster IP if using a custom cluster DNS
 # manual_dns_server: 10.x.x.x
@@ -216,7 +213,7 @@ docker_options: >-
   {% if docker_registry_mirrors is defined %}
   {{ docker_registry_mirrors | map('regex_replace', '^(.*)$', '--registry-mirror=\1' ) | list | join(' ') }}
   {%- endif %}
-  {%- if docker_version != "latest" and docker_version is version('17.05', '<') %}
+  {%- if docker_version is version('17.05', '<') %}
   --graph={{ docker_daemon_graph }} {{ docker_log_opts }}
   {%- else %}
   --data-root={{ docker_daemon_graph }} {{ docker_log_opts }}
@@ -229,9 +226,13 @@ docker_options: >-
 
 # Settings for containerized control plane (etcd/kubelet/secrets)
 etcd_deployment_type: docker
+kubelet_deployment_type: docker
 cert_management: script
 
 helm_deployment_type: host
+
+# Enable kubeadm deployment
+kubeadm_enabled: true
 
 # Make a copy of kubeconfig on the host that runs Ansible in {{ inventory_dir }}/artifacts
 kubeconfig_localhost: false
@@ -281,7 +282,7 @@ openstack_cacert: "{{ lookup('env','OS_CACERT') }}"
 ## the k8s cluster. Only 'AlwaysAllow', 'AlwaysDeny', 'Node' and
 ## 'RBAC' modes are tested. Order is important.
 authorization_modes: ['Node', 'RBAC']
-rbac_enabled: "{{ 'RBAC' in authorization_modes }}"
+rbac_enabled: "{{ 'RBAC' in authorization_modes or kubeadm_enabled }}"
 
 # When enabled, API bearer tokens (including service account tokens) can be used to authenticate to the kubelet’s HTTPS endpoint
 kubelet_authentication_token_webhook: true
@@ -394,8 +395,18 @@ kube_apiserver_endpoint: |-
   {%- endif %}
 kube_apiserver_insecure_endpoint: >-
   http://{{ kube_apiserver_insecure_bind_address | regex_replace('0\.0\.0\.0','127.0.0.1') }}:{{ kube_apiserver_insecure_port }}
-kube_apiserver_client_cert: "{{ kube_cert_dir }}/ca.crt"
-kube_apiserver_client_key: "{{ kube_cert_dir }}/ca.key"
+kube_apiserver_client_cert: |-
+  {% if kubeadm_enabled -%}
+  {{ kube_cert_dir }}/ca.crt
+  {%- else -%}
+  {{ kube_cert_dir }}/apiserver.pem
+  {%- endif %}
+kube_apiserver_client_key: |-
+  {% if kubeadm_enabled -%}
+  {{ kube_cert_dir }}/ca.key
+  {%- else -%}
+  {{ kube_cert_dir }}/apiserver-key.pem
+  {%- endif %}
 
 # Set to true to deploy etcd-events cluster
 etcd_events_cluster_enabled: false
@@ -452,6 +463,3 @@ pip_extra_args: |-
   {%- endif -%}
   {%- endif -%}
   {{ pip_extra_args_list|join(' ') }}
-
-etcd_config_dir: /etc/ssl/etcd
-etcd_cert_dir: "{{ etcd_config_dir }}/ssl"

@@ -8,7 +8,8 @@ Wants=docker-storage-setup.service
 After=network.target docker.socket
 Wants=docker.socket
 {% elif ansible_os_family == "Suse" %}
-After=network.target
+After=network.target containerd.socket containerd.service
+Requires=containerd.socket containerd.service
 {% endif %}
 
 [Service]
@@ -16,19 +17,14 @@ Type=notify
 {% if docker_storage_options is defined %}
 Environment="DOCKER_STORAGE_OPTIONS={{ docker_storage_options }}"
 {% endif %}
-Environment=GOTRACEBACK=crash
+#Environment=GOTRACEBACK=crash
 ExecReload=/bin/kill -s HUP $MAINPID
 Delegate=yes
 KillMode=process
-ExecStart={{ docker_bin_dir }}/docker{% if installed_docker_version.stdout is version('17.03', '<') %} daemon{% else %}d{% endif %} \
+ExecStart={{ docker_bin_dir }}/dockerd 
 {% if ansible_os_family == "Suse" %}
-          --add-runtime oci=/usr/sbin/docker-runc \
+          --containerd /run/containerd/containerd.sock --add-runtime oci=/usr/bin/docker-runc \
 {% endif %}
-          $DOCKER_OPTS \
-          $DOCKER_STORAGE_OPTIONS \
-          $DOCKER_NETWORK_OPTIONS \
-          $DOCKER_DNS_OPTIONS \
-          $INSECURE_REGISTRY
 {% if not is_atomic and systemd_version.stdout|int >= 226 %}
 TasksMax=infinity
 {% endif %}

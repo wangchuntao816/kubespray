@@ -1,4 +1,7 @@
 ---
+# Valid options: docker (default), rkt, or host
+kubelet_deployment_type: host
+
 # change to 0.0.0.0 to enable insecure access from anywhere (not recommended)
 kube_apiserver_insecure_bind_address: 127.0.0.1
 
@@ -67,6 +70,8 @@ nginx_image_repo: nginx
 nginx_image_tag: 1.13
 nginx_config_dir: "/etc/nginx"
 
+etcd_config_dir: /etc/ssl/etcd
+
 kubelet_flexvolumes_plugins_dir: /var/lib/kubelet/volume-plugins
 
 # A port range to reserve for services with NodePort visibility.
@@ -84,6 +89,12 @@ kubelet_custom_flags: []
 
 ## Support custom flags to be passed to kubelet only on nodes, not masters
 kubelet_node_custom_flags: []
+
+# This setting is used for rkt based kubelet for deploying hyperkube
+# from a docker based registry ( controls --insecure and docker:// )
+## Empty value for quay.io containers
+## docker for docker registry containers
+kube_hyperkube_image_repo: ""
 
 # If non-empty, will use this string as identification instead of the actual hostname
 kube_override_hostname: >-
